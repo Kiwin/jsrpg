@@ -1,0 +1,2 @@
+Add: time consumtion when actions are performed by the player.
+Add: Day and night cycle.

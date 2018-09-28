@@ -7,11 +7,24 @@ document.addEventListener('keydown', function(event) {
   console.log(input);
 });
 
+class GameObject {
+
+  constructor(){
+    this.isPickupable = false;
+  }
+
+  use(tool){
+    console.log("Nothing happened");
+  }
+
+}
+
 class Tile {
   constructor(x, y) {
     this.x = x;
     this.y = y;
     this.biome = 0;
+    this.worldObjects = [];
   }
 }
 
@@ -38,7 +51,6 @@ class World {
     this.tiles.push(newTile);
     return newTile;
   }
-  
 }
 
 class Player {
