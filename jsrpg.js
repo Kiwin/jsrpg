@@ -48,11 +48,13 @@ class GameWorldGenerator {
 class GameWorld {
   constructor() {
     this.tiles = [];
+    this.lastSelectedTile = null;
   }
-  tileAt(x, y){
+  tileAt(x,y){
+    console.log("awd");
     //Search For Tile in Tiles:Array
     this.tiles.forEach(tile => {
-      if(tile.x == x && tile.y == y) return tile;
+      if(x == tile.x || y == tile.y) {return tile;}
     });
     
     //Else Generate Tile via WorldGenerator:Class
@@ -61,6 +63,15 @@ class GameWorld {
     newTile.biome = Math.round(Math.random()*3);
     this.tiles.push(newTile);
     return newTile;
+  }
+  tileExist(x,y){
+    this.tiles.forEach(tile => {
+      if(tile.x == x && tile.y == y){
+        this.lastSelectedTile = tile;
+        return true;
+      }
+    });
+    return false;
   }
 }
 
@@ -103,22 +114,25 @@ class Game {
     ctx_clear("#0000ff");
     while(true){
       ctx_clear();
-      drawMessages();
       break;
     }
     console.log("GAME: STOPPED");
   }
 }
-
-function drawMessages(){
-  messages.push("CURRENT: "+getKeyByValue(BIOME, GAME.PLAYER.currentTile.biome));
-  messages.push("NORTH: "+getKeyByValue(BIOME, GAME.WORLD.tileAt(0,1).biome));
-  messages.push("SOUTH: "+getKeyByValue(BIOME, GAME.WORLD.tileAt(0,-1).biome));
-  messages.push("WEST: "+getKeyByValue(BIOME, GAME.WORLD.tileAt(1,0).biome));
-  messages.push("EAST: "+getKeyByValue(BIOME, GAME.WORLD.tileAt(-1,0).biome));
-  for(let i = 0; i < Math.min(30,messages.length); i++){
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(i+": "+messages[i], 50, height - (i * fontSize+10));
+var x = 0;
+var y = 0;
+function drawMap(){
+  console.log(x+";"+y);
+  ctx_clear();
+  for(let i = 0; i <= 20; i++){
+    for(let j = 0; j <= 20; j++){
+      var chr = "?";
+      if(GAME.WORLD.tileExist(x+i-10,y+j-10)){
+        chr = GAME.WORLD.tileAt(x+i-10,y+j-10);
+      }
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(chr, i*fontSize, height-j*fontSize);
+    } 
   }
 }
 
@@ -131,4 +145,22 @@ window.onload = function(){
 
 
 document.addEventListener('keydown', function(event) {
+  let keyChar = String.fromCharCode(event.keyCode);
+  console.log(event.keyCode);
+  if(keyChar == "A"){
+    x--;
+    drawMap();
+  }
+  if(keyChar == "W"){
+    drawMap();
+    y++;
+  }
+  if(keyChar == "D"){
+    drawMap();
+    x++;
+  }
+  if(keyChar == "S"){
+    y--;
+    drawMap();
+  }
 });
