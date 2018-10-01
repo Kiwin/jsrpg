@@ -1,10 +1,7 @@
 var canvas, ctx, width, height;
 var GAME;
-var BIOME = {"PLAIN":0, "FOREST":0, "DESERT":0};
-var TAG = {"PICKUP_ABLE":0}
-var input = "";
-var inputFilter = /[^a-zA-Z0-9 ]/
-var font = "30px Arial";
+var fontSize = 18;
+var font = fontSize.toString()+"px Arial";
 
 Object.size = function(obj) {
   var size = 0, key;
@@ -13,6 +10,10 @@ Object.size = function(obj) {
   }
   return size;
 };
+
+Object.keyOf = function(_enum, value) {
+  return Object.keys(_enum).find(key => _enum[key] === value);
+}
 
 function chr(c){
   return c.charCodeAt(0);
@@ -38,30 +39,10 @@ function ctx_clear(color = "#000"){
 }
 
 document.addEventListener('keydown', function(event) {
-  console.log("char: " + event.keyCode.toString());
-  if(event.keyCode == 13){
-    formatForUse(input).split(" ").forEach(function(str){
-      if(str != ""){
-      console.log(str);
-      }
-    }); 
-    input = "";
-  }else if(event.keyCode == 8){
-    if(input.length>0){
-      input = input.substr(0,input.length-1);
-    }
-  }else{
-    inputKeyStr=String.fromCharCode(event.keyCode);
-    if(!inputKeyStr.match(inputFilter)){ 
-      input += inputKeyStr;
-    }
-  }
-  ctx_clear();
-  ctx.fillStyle = "#fff";
-  ctx.fillText(input.replace(/ /g,"_"), 10, 40);
+  console.log("keyPressed: " + event.keyCode.toString());
 });
 
-
+var TAG = {"PICKUP_ABLE":0, "PLAYER":1}
 var ID_CNT = 0;
 class GameObject {
   constructor(){
@@ -72,6 +53,14 @@ class GameObject {
 
   use(item){
     console.log("Nothing happened");
+  }
+  get description(){
+    let desc = this.id.toString();
+    desc += ":"+this.name.toString();
+    if(this.tags.length){
+      desc += ":["+this.tags.join(";")+"]";
+    }
+    return desc;
   }
 }
 
@@ -99,11 +88,14 @@ class GameCreature extends GameObject {
   onDeath(){
     console.log(this.id.toString()+" Died");
   }
+
 }
 
 class Player extends GameCreature {
   constructor() {
     super(0,0,3);
+    this.name = "Player";
+    this.tags.push(TAG.PLAYER);
   }
 }
 
@@ -113,6 +105,7 @@ class GameItem extends GameObject{
   }
 }
 
+var BIOME = {"PLAIN FIELD":0, "FOREST":1, "DESERT":2};
 class Tile extends GameObject {
   constructor(x, y) {
     super();
@@ -123,16 +116,79 @@ class Tile extends GameObject {
   }
 }
 
-class WorldGenerator {
+class GameWorldGenerator {
   static generateTile(x, y){
     let tile = new Tile(x, y);
-    tile.biome = Math.round(Math.random()*(BIOME.size()-1));
+    tile.biome = Math.round(Math.random()*(Object.size(BIOME)-1));
     return tile;
   }
 }
 
-class World {
+class Clock {
+  
+  constructor(startTime = 0){
+    this.time = startTime;
+  }
+
+  get analog(){
+    return this.hours().toString()+":"+this.minutes().toString();
+  }
+
+  get full(){
+    return this.minutes.toString() + ":" +
+          this.hours.toString() + " " +
+          this.days.toString() + "-" +
+          this.months.toString() + "-" +
+          this.years.toString();
+  }
+
+  get minutes(){
+    return Math.floor((this.time%Clock.hour())/Clock.minute());
+  }
+
+  get hours(){
+    return Math.floor((this.time%Clock.day())/Clock.hour());
+  }
+
+  get days(){
+    return Math.floor((this.time%Clock.month())/Clock.day());
+  }
+  
+  get months(){
+    return Math.floor((this.time%Clock.year())/Clock.month());
+  }
+
+  get years(){
+    return Math.floor(this.time/Clock.year());
+  }
+
+  static minute(n=1){
+    return n;
+  }
+
+  static hour(n=1){
+    return n*60;
+  }
+
+  static day(n=1){
+    return n*1440;
+  }
+  static month(n=1){
+    return n*43200;
+  }
+  static year(n=1){
+    return n*518400;
+  }
+
+  progressTime(progression){
+    this.time += timeProgression;
+  }
+
+}
+
+class GameWorld {
   constructor() {
+    this.CLOCK = new Clock(15313);
     this.tiles = [];
   }
   tileAt(x, y){
@@ -142,7 +198,7 @@ class World {
     });
     
     //Else Generate Tile via WorldGenerator:Class
-    let newTile = WorldGenerator.generateTile(x, y);
+    let newTile = GameWorldGenerator.generateTile(x, y);
     this.tiles.push(newTile);
     return newTile;
   }
@@ -153,7 +209,8 @@ class Game{
   constructor(){
     console.log("GAME: STARTED INITIALIZING");
     this.PLAYER = new Player();
-    this.WORLD = new World();
+    this.WORLD = new GameWorld();
+    this.TERMINAL = new GameTerminal();
     console.log("GAME: DONE INITIALIZING");
   }
 
@@ -161,10 +218,38 @@ class Game{
     console.log("GAME: STARTED");
     ctx_clear();
     while(true){
+      let str = "You are stading in a "
+        + Object.keyOf(BIOME,GAME.PLAYER.currentTile.biome);
+        + 
+        GAME.TERMINAL.write(str);
+      GAME.TERMINAL.draw(40,40);
       break;
     }
     console.log("GAME: STOPPED");
   }
+}
+
+class GameTerminal {
+
+  constructor(){
+    this.messages = [];
+    this.inputField;
+  }
+
+  write(str){
+    this.messages.push(str);
+  }
+
+  drawMessage(str, x, y, w){
+    ctx.fillText(str, x, y, w);
+  }
+
+  draw(x,y){
+    let str = this.messages.join("\n");
+    ctx.fillStyle = "#fff";
+    ctx.fillText(str,x,y);
+  }
+
 }
 
 window.onload = function(){
