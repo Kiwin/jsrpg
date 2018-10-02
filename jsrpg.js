@@ -131,7 +131,7 @@ class Clock {
   }
 
   get analog(){
-    return this.hours().toString()+":"+this.minutes().toString();
+    return this.hours.toString()+":"+this.minutes.toString();
   }
 
   get full(){
@@ -219,8 +219,8 @@ class Game{
     ctx_clear();
     while(true){
       let str = "You are stading in a "
-        + Object.keyOf(BIOME,GAME.PLAYER.currentTile.biome);
-        + 
+        + Object.keyOf(BIOME,GAME.PLAYER.currentTile.biome)
+        + "\n The clock is "+ GAME.WORLD.CLOCK.full;
         GAME.TERMINAL.write(str);
       GAME.TERMINAL.draw(40,40);
       break;
