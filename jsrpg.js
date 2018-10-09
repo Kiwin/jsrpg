@@ -188,7 +188,7 @@ class Clock {
 
 class GameWorld {
   constructor() {
-    this.CLOCK = new Clock(15313);
+    this.CLOCK = new Clock(Clock.day(3)+Clock.hour(5)+Clock.minute(37)+Clock.year(2));
     this.tiles = [];
   }
   tileAt(x, y){
