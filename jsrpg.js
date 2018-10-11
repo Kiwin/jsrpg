@@ -43,10 +43,10 @@ document.addEventListener('keydown', function(event) {
 });
 
 var TAG = {"PICKUP_ABLE":0, "PLAYER":1}
-var ID_CNT = 0;
+var GOBJ_ID_CNT = 0;
 class GameObject {
   constructor(){
-    this.id = ID_CNT++;
+    this.id = GOBJ_ID_CNT++;
     this.name = "gobj";
     this.tags = [];
   }
@@ -106,9 +106,12 @@ class GameItem extends GameObject{
 }
 
 var BIOME = {"PLAIN FIELD":0, "FOREST":1, "DESERT":2};
+var TILE_ID_CNT = 0;
 class Tile extends GameObject {
   constructor(x, y) {
     super();
+    this.id = TILE_ID_CNT++;
+    this.name = "Tile";
     this.x = x;
     this.y = y;
     this.biome = 0;
@@ -180,8 +183,8 @@ class Clock {
     return n*518400;
   }
 
-  progressTime(progression){
-    this.time += timeProgression;
+  progressTime(progress){
+    this.time += progress;
   }
 
 }
@@ -192,11 +195,18 @@ class GameWorld {
     this.tiles = [];
   }
   tileAt(x, y){
-    //Search For Tile in Tiles:Array
+    //Search For Tile in 'tiles' array
+    var tileFoundInTiles; 
     this.tiles.forEach(tile => {
-      if(tile.x == x && tile.y == y) return tile;
+      if(tile.x == x && tile.y == y) {
+        tileFoundInTiles = tile;
+        return;
+      }
     });
     
+    if(tileFoundInTiles){
+      return tileFoundInTiles;
+    }
     //Else Generate Tile via WorldGenerator:Class
     let newTile = GameWorldGenerator.generateTile(x, y);
     this.tiles.push(newTile);
@@ -220,12 +230,35 @@ class Game{
     while(true){
       let str = "You are stading in a "
         + Object.keyOf(BIOME,GAME.PLAYER.currentTile.biome)
-        + "\n The clock is "+ GAME.WORLD.CLOCK.full;
-        GAME.TERMINAL.write(str);
-      GAME.TERMINAL.draw(40,40);
+      GAME.TERMINAL.writeline(str);
+
+      str = "To the NORTH is a "
+        + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x, GAME.PLAYER.y+1).biome);
+        GAME.TERMINAL.writeline(str);
+
+      str = "To the EAST is a "
+        + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x+1, GAME.PLAYER.y).biome);
+        GAME.TERMINAL.writeline(str);
+
+      str = "To the SOUTH is a "
+        + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x, GAME.PLAYER.y-1).biome);
+        GAME.TERMINAL.writeline(str);
+
+      str = "To the WEST is a "
+        + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x-1, GAME.PLAYER.y).biome);
+        GAME.TERMINAL.writeline(str);
+
+      str = "The clock is "+ GAME.WORLD.CLOCK.full;
+        GAME.TERMINAL.writeline(str);
+
+        GAME.draw();
       break;
     }
     console.log("GAME: STOPPED");
+  }
+
+  draw(){
+    GAME.TERMINAL.draw(40,40);
   }
 }
 
@@ -239,15 +272,28 @@ class GameTerminal {
   write(str){
     this.messages.push(str);
   }
+  writeline(str){
+    this.messages.push(str+"\n");
+  }
 
-  drawMessage(str, x, y, w){
-    ctx.fillText(str, x, y, w);
+  drawMessage(str, x, y){
+    ctx.fillStyle = "#fff";
+    var subStrArr = str.split("\n");
+    var i = 0;
+    subStrArr.forEach(subStr => {
+      ctx.fillText(subStr, x, y+fontSize*i);
+      i++;
+    });
+    
   }
 
   draw(x,y){
-    let str = this.messages.join("\n");
-    ctx.fillStyle = "#fff";
-    ctx.fillText(str,x,y);
+    let str = this.messages.join("");
+    this.drawMessage(str, x, y);
+  }
+
+  clear(){
+    this.messages = [];
   }
 
 }
@@ -256,4 +302,5 @@ window.onload = function(){
   canvas_init();
   GAME = new Game();
   GAME.start();
+  console.log(GAME);
 }
