@@ -2,6 +2,7 @@ var canvas, ctx, width, height;
 var GAME;
 var fontSize = 18;
 var font = fontSize.toString()+"px Arial";
+var inputString = "";
 
 Object.size = function(obj) {
   var size = 0, key;
@@ -15,11 +16,17 @@ Object.keyOf = function(_enum, value) {
   return Object.keys(_enum).find(key => _enum[key] === value);
 }
 
-function chr(c){
-  return c.charCodeAt(0);
+function keyToChar(c){
+  return String.fromCharCode(c);
 }
 
-function formatForUse(str){
+function validateInput(str){
+  re = /[a-zA-Z\d _]/;
+  result = str.match(re);
+  return result;
+}
+
+function cleanseInputString(str){
   str = str.replace(/^ +/,"");
   str = str.replace(/  +/g," ");
   return str;
@@ -254,41 +261,10 @@ class Game{
   }
 
   draw(){
-    let str = "Position: x:"+GAME.PLAYER.x+" y:"+GAME.PLAYER.y;
-    GAME.TERMINAL.writeline(str);
-    str = "You are stading in a "
-      + Object.keyOf(BIOME,GAME.PLAYER.currentTile.biome)
-    GAME.TERMINAL.writeline(str);
-    if(GAME.PLAYER.currentTile.worldObjects.length > 0){
-      str = "Nearby you spot "
-      GAME.TERMINAL.writeline(str);
-      GAME.PLAYER.currentTile.worldObjects.forEach(worldObject => {
-        str = "A " + worldObject.name;
-        GAME.TERMINAL.writeline(str);
-      });
-    }
-
-    str = "To the NORTH is a "
-      + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x, GAME.PLAYER.y+1).biome);
-      GAME.TERMINAL.writeline(str);
-
-    str = "To the EAST is a "
-      + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x+1, GAME.PLAYER.y).biome);
-      GAME.TERMINAL.writeline(str);
-
-    str = "To the SOUTH is a "
-      + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x, GAME.PLAYER.y-1).biome);
-      GAME.TERMINAL.writeline(str);
-
-    str = "To the WEST is a "
-      + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x-1, GAME.PLAYER.y).biome);
-      GAME.TERMINAL.writeline(str);
-
-    str = "The clock is "+ GAME.WORLD.CLOCK.full;
-      GAME.TERMINAL.writeline(str);
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0,0,width,height);
-    GAME.TERMINAL.draw(40,40);
+    ctx_clear();
+    ctx.fillStyle = "#fff";
+    GAME.TERMINAL.drawMessages(40,height-fontSize*3,30);
+    GAME.TERMINAL.drawMessage(inputString,40,height-fontSize*2,1);
   }
 }
 
@@ -306,20 +282,17 @@ class GameTerminal {
     this.messages.push(str+"\n");
   }
 
-  drawMessage(str, x, y){
-    ctx.fillStyle = "#fff";
+  drawMessage(str, x, y, lines = 30){
     var subStrArr = str.split("\n");
-    var i = 0;
-    subStrArr.forEach(subStr => {
-      ctx.fillText(subStr, x, y+fontSize*i);
-      i++;
-    });
-    
+    lines = Math.min(lines, subStrArr.length);
+    for(let i = 0; i < lines; i++){
+      ctx.fillText(subStrArr[i], x, y-fontSize*(lines-i-1));
+    }
   }
 
-  draw(x,y){
+  drawMessages(x,y,lines = 30){
     let str = this.messages.join("");
-    this.drawMessage(str, x, y);
+    this.drawMessage(str, x, y, lines);
   }
 
   clear(){
@@ -335,26 +308,21 @@ window.onload = function(){
   console.log(GAME);
 }
 
-document.addEventListener('keydown', function(event) {
-  console.log(event.keyCode.toString());
-  switch(String.fromCharCode(event.keyCode).toLocaleLowerCase()){
-    case "w": {
-      GAME.PLAYER.y++;
-      break;
-    }
-    case "a": {
-      GAME.PLAYER.x--;
-      break;
-    }
-    case "s": {
-      GAME.PLAYER.y--;
-      break;
-    }
-    case "d": {
-      GAME.PLAYER.x++;
-      break;
-    }
+function handleInput(){
+  if(inputString.length > 0){
+    GAME.TERMINAL.writeline(inputString);
   }
-  GAME.TERMINAL.clear();
+  inputString = "";
+}
+
+document.addEventListener('keydown', function(event) {
+  let key = event.keyCode;
+  let keyChar = keyToChar(key);
+  console.log("keyPressed: "+event.keyCode+":"+keyChar);
+  if(key == 13){ //Enter was pressed
+    handleInput();
+  }else if(validateInput(keyChar)){
+    inputString = cleanseInputString(inputString+keyChar);
+  }
   GAME.draw();
 });
