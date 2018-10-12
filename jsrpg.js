@@ -38,10 +38,6 @@ function ctx_clear(color = "#000"){
   ctx.fillRect(0,0,width,height);
 }
 
-document.addEventListener('keydown', function(event) {
-  console.log("keyPressed: " + event.keyCode.toString());
-});
-
 var TAG = {"PICKUP_ABLE":0, "PLAYER":1}
 var GOBJ_ID_CNT = 0;
 class GameObject {
@@ -123,7 +119,30 @@ class GameWorldGenerator {
   static generateTile(x, y){
     let tile = new Tile(x, y);
     tile.biome = Math.round(Math.random()*(Object.size(BIOME)-1));
+    GameWorldGenerator.generateTileWorldObjects(tile);
     return tile;
+  }
+  static generateTileWorldObjects(tile){
+    switch(tile.biome){
+      case BIOME["PLAIN FIELD"]:{
+        //Add trees to forrest
+        let treeCount = 5;
+        for(let i = 0; i < treeCount; i++){
+          let tree = new GameObject();
+          tree.name = "tree";
+          tile.worldObjects.push(tree);
+        }
+        break;
+      }
+      case BIOME["FOREST"]:{
+        
+        break;
+      }
+      case BIOME["DESERT"]:{
+        
+        break;
+      }
+    }
   }
 }
 
@@ -228,29 +247,6 @@ class Game{
     console.log("GAME: STARTED");
     ctx_clear();
     while(true){
-      let str = "You are stading in a "
-        + Object.keyOf(BIOME,GAME.PLAYER.currentTile.biome)
-      GAME.TERMINAL.writeline(str);
-
-      str = "To the NORTH is a "
-        + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x, GAME.PLAYER.y+1).biome);
-        GAME.TERMINAL.writeline(str);
-
-      str = "To the EAST is a "
-        + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x+1, GAME.PLAYER.y).biome);
-        GAME.TERMINAL.writeline(str);
-
-      str = "To the SOUTH is a "
-        + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x, GAME.PLAYER.y-1).biome);
-        GAME.TERMINAL.writeline(str);
-
-      str = "To the WEST is a "
-        + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x-1, GAME.PLAYER.y).biome);
-        GAME.TERMINAL.writeline(str);
-
-      str = "The clock is "+ GAME.WORLD.CLOCK.full;
-        GAME.TERMINAL.writeline(str);
-
         GAME.draw();
       break;
     }
@@ -258,6 +254,40 @@ class Game{
   }
 
   draw(){
+    let str = "Position: x:"+GAME.PLAYER.x+" y:"+GAME.PLAYER.y;
+    GAME.TERMINAL.writeline(str);
+    str = "You are stading in a "
+      + Object.keyOf(BIOME,GAME.PLAYER.currentTile.biome)
+    GAME.TERMINAL.writeline(str);
+    if(GAME.PLAYER.currentTile.worldObjects.length > 0){
+      str = "Nearby you spot "
+      GAME.TERMINAL.writeline(str);
+      GAME.PLAYER.currentTile.worldObjects.forEach(worldObject => {
+        str = "A " + worldObject.name;
+        GAME.TERMINAL.writeline(str);
+      });
+    }
+
+    str = "To the NORTH is a "
+      + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x, GAME.PLAYER.y+1).biome);
+      GAME.TERMINAL.writeline(str);
+
+    str = "To the EAST is a "
+      + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x+1, GAME.PLAYER.y).biome);
+      GAME.TERMINAL.writeline(str);
+
+    str = "To the SOUTH is a "
+      + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x, GAME.PLAYER.y-1).biome);
+      GAME.TERMINAL.writeline(str);
+
+    str = "To the WEST is a "
+      + Object.keyOf(BIOME,GAME.WORLD.tileAt(GAME.PLAYER.x-1, GAME.PLAYER.y).biome);
+      GAME.TERMINAL.writeline(str);
+
+    str = "The clock is "+ GAME.WORLD.CLOCK.full;
+      GAME.TERMINAL.writeline(str);
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0,0,width,height);
     GAME.TERMINAL.draw(40,40);
   }
 }
@@ -304,3 +334,27 @@ window.onload = function(){
   GAME.start();
   console.log(GAME);
 }
+
+document.addEventListener('keydown', function(event) {
+  console.log(event.keyCode.toString());
+  switch(String.fromCharCode(event.keyCode).toLocaleLowerCase()){
+    case "w": {
+      GAME.PLAYER.y++;
+      break;
+    }
+    case "a": {
+      GAME.PLAYER.x--;
+      break;
+    }
+    case "s": {
+      GAME.PLAYER.y--;
+      break;
+    }
+    case "d": {
+      GAME.PLAYER.x++;
+      break;
+    }
+  }
+  GAME.TERMINAL.clear();
+  GAME.draw();
+});
