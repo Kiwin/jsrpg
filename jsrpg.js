@@ -288,7 +288,7 @@ class Game{
       GAME.TERMINAL.writeline(str);
     ctx.fillStyle = "#000";
     ctx.fillRect(0,0,width,height);
-    GAME.TERMINAL.draw(40,40);
+    GAME.TERMINAL.drawMessages(40, height-40, true);
   }
 }
 
@@ -306,20 +306,21 @@ class GameTerminal {
     this.messages.push(str+"\n");
   }
 
-  drawMessage(str, x, y){
+  drawMessage(str, x, y, upwards = false){
     ctx.fillStyle = "#fff";
     var subStrArr = str.split("\n");
     var i = 0;
-    subStrArr.forEach(subStr => {
-      ctx.fillText(subStr, x, y+fontSize*i);
+    upwards = upwards?-1:1;
+    subStrArr.slice().reverse().forEach(subStr => {
+      ctx.fillText(subStr, x, y+fontSize*i*upwards);
       i++;
     });
     
   }
 
-  draw(x,y){
+  drawMessages(x,y, upwards = false){
     let str = this.messages.join("");
-    this.drawMessage(str, x, y);
+    this.drawMessage(str, x, y, upwards);
   }
 
   clear(){
